@@ -39,11 +39,11 @@ func createInterface(flags uint16, name string) (string, *os.File, error) {
 		name:  nbuf,
 		flags: flags,
 	}
-	if err := ioctl(fd, syscall.TUNSETIFF, unsafe.Pointer(&ifr)); err != nil {
+	if err := ioctl(uintptr(fd), syscall.TUNSETIFF, unsafe.Pointer(&ifr)); err != nil {
 		return "", nil, err
 	}
 
-	return cstringToGoString(ifr.name[:]), os.NewFile(fd, ""), nil
+	return cstringToGoString(ifr.name[:]), os.NewFile(uintptr(fd), ""), nil
 }
 
 func destroyInterface(name string) error {
