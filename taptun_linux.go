@@ -22,20 +22,18 @@ func createInterface(flags uint16, name string) (string, *os.File, error) {
 		return "", nil, errors.New("device name too long")
 	}
 
-	f, err := unix.Open("/dev/net/tun", os.O_RDWR, 0600)
+	fd, err := unix.Open("/dev/net/tun", os.O_RDWR, 0600)
 	if err != nil {
 		return "", nil, err
 	}
 
-	err = unix.SetNonblock(f, true)
+	err = unix.SetNonblock(fd, true)
 	if err != nil {
 		return "", nil, err
 	}
 
 	var nbuf [syscall.IFNAMSIZ]byte
 	copy(nbuf[:], []byte(name))
-
-	fd := f.Fd()
 
 	ifr := ifreq{
 		name:  nbuf,
@@ -44,7 +42,8 @@ func createInterface(flags uint16, name string) (string, *os.File, error) {
 	if err := ioctl(fd, syscall.TUNSETIFF, unsafe.Pointer(&ifr)); err != nil {
 		return "", nil, err
 	}
-	return cstringToGoString(ifr.name[:]), f, nil
+
+	return cstringToGoString(ifr.name[:]), os.NewFile(fd, ""), nil
 }
 
 func destroyInterface(name string) error {
